@@ -8,7 +8,7 @@
 # ======================
 # 🧠 Python 编译与缓存文件
 # ======================
-__pycache__               # Python 字节码缓存目录
+**/__pycache__/           # Python 字节码缓存目录
 *.py[cod]                 # 编译后的 .pyc/.pyo/.pyd 文件
 *$py.class                # Jython 编译缓存
 
