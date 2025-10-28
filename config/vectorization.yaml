@@ -1,0 +1,126 @@
+# ==========================================
+# 向量化配置文件 - 单块结构化融合方案
+# ==========================================
+
+# 数据源配置
+data_source:
+  input_csv: "./data/processed/93182_steam_games_cleaned.csv"
+  input_parquet: "./data/processed/93182_steam_games_cleaned.parquet"
+  
+# 文本融合模板配置
+text_fusion:
+  # 融合文本模板 - 决定最终送入embedding的文本格式
+  template: |
+    Name: {Name}.
+    About: {About_cleaned}.
+    Genres: {Genres}.
+    Tags: {Tags}.
+    Categories: {Categories}.
+    Release year: {Release_year}.
+    Platforms: {Platforms}.
+    Popularity: {popularity_score:.3f}, Quality: {quality_score:.3f}.
+  
+  # About the game 文本清洗配置
+  about_cleaning:
+    max_tokens: 600  # 保留前N个token,避免过长
+    remove_html: true
+    remove_urls: true
+    remove_extra_spaces: true
+  
+  # 缺失值填充
+  default_values:
+    Name: "Unknown Game"
+    About_the_game: "No description available."
+    Genres: "Unknown"
+    Tags: "Unknown"
+    Categories: "Unknown"
+    Release_date: "Unknown"
+
+# Metadata字段配置 - 存入向量库但不参与embedding
+metadata_fields:
+  # 必须字段
+  required:
+    - AppID
+    - Name
+  
+  # 文本字段
+  text:
+    - Genres
+    - Tags
+    - Categories
+    - Developers
+    - Publishers
+    - Supported languages
+    - About the game
+  
+  # 数值字段
+  numeric:
+    - Price
+    - Positive
+    - Negative
+    - Recommendations
+    - Estimated owners
+    - Peak CCU
+    - Average playtime forever
+    - Median playtime forever
+    - Metacritic score
+    - popularity_score
+    - quality_score
+    - final_rating
+  
+  # 布尔字段
+  boolean:
+    - Windows
+    - Mac
+    - Linux
+  
+  # 日期字段
+  temporal:
+    - Release date
+    - Release_year
+  
+  # 其他
+  other:
+    - Header image
+
+# 特征工程配置
+feature_engineering:
+  # 评分计算
+  rating:
+    # Wilson Score 置信区间下界(考虑评价数量)
+    method: "wilson_score"  # 可选: simple, wilson_score, bayesian
+    confidence: 0.95
+  
+  # 热度评分(归一化)
+  popularity:
+    weights:
+      owners: 0.4
+      recommendations: 0.3
+      peak_ccu: 0.2
+      playtime: 0.1
+    normalization: "minmax"  # 可选: minmax, zscore, log
+  
+  # 质量评分
+  quality:
+    weights:
+      user_rating: 0.5
+      metacritic: 0.3
+      playtime: 0.2
+    normalization: "minmax"
+
+# 批处理配置
+batch_processing:
+  chunk_size: 256  # 每批处理的游戏数量
+  show_progress: true
+  save_checkpoint: true
+  checkpoint_interval: 1000  # 每N条保存一次检查点
+
+# 向量库配置(引用models.yaml中的vectordb配置)
+# 这里只配置向量化特有的参数
+vectordb:
+  collection_name: "steam_games_single_block"
+  distance_metric: "cosine"
+  index_params:
+    # HNSW参数(Chroma默认)
+    M: 16  # 每个节点的邻居数
+    ef_construction: 200  # 构建时的搜索深度

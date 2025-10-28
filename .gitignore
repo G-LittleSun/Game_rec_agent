@@ -1,0 +1,206 @@
+# =====================================================
+# 🐍 Python 项目通用忽略文件
+# 适用于：机器学习 / 推荐系统 / 数据爬虫 / 包开发
+# 作者：ChatGPT 自动生成（为 game_rec_agent 项目定制）
+# =====================================================
+
+
+# ======================
+# 🧠 Python 编译与缓存文件
+# ======================
+__pycache__/              # Python 字节码缓存目录
+*.py[cod]                 # 编译后的 .pyc/.pyo/.pyd 文件
+*$py.class                # Jython 编译缓存
+
+
+# ======================
+# 📦 虚拟环境与安装产物
+# ======================
+.venv/
+venv/
+env/
+*.egg-info/               # setuptools 打包信息
+.eggs/
+dist/                     # 打包生成的安装文件
+build/
+wheels/
+pip-wheel-metadata/
+*.egg
+
+
+# ======================
+# 🧰 IDE / 编辑器配置文件
+# ======================
+.vscode/                  # VSCode 工作区配置
+.idea/                    # PyCharm / IntelliJ 配置
+*.swp                     # Vim 临时文件
+*.swo
+*.bak
+*.tmp
+*.orig
+*.old
+.DS_Store                 # macOS 文件管理器缓存
+Thumbs.db                 # Windows 文件管理器缓存
+
+
+# ======================
+# 📒 Jupyter Notebook 相关
+# ======================
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+*.ipynb~                  # 临时保存文件
+*.nbconvert.ipynb         # 转换生成的副本
+
+
+# ======================
+# 🧾 日志与运行输出
+# ======================
+logs/                     # 日志文件目录
+*.log
+*.out
+*.err
+nohup.out                 # nohup 执行输出
+
+
+# ======================
+# ⚙️ 临时文件与运行缓存
+# ======================
+tmp/
+temp/
+cache/
+outputs/
+runs/                     # 训练或实验结果输出
+*.tmp
+*.bak
+*.cache
+
+
+# ======================
+# 🧬 数据与模型缓存
+# ======================
+# HuggingFace 模型缓存目录（非常大！）
+data/model_cache/
+.cache/huggingface/
+huggingface/
+
+# 已处理数据和原始数据集
+data/processed/
+data/raw/*.csv
+data/raw/*.json
+data/raw/*.parquet
+data/raw/*.arrow
+data/raw/steam_games_dataset/
+data/raw/steam_game_rank_review/
+
+# 保留 README.md 文件
+!data/raw/README.md
+!data/processed/README.md
+
+# 忽略常见模型文件类型（避免上传大文件）
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.h5
+*.pkl
+*.pickle
+*.npz
+*.npy
+*.ckpt
+*.onnx
+*.model
+*.weights
+*.hdf5
+*.msgpack
+
+# 如果希望保留空目录结构，可在各目录放置 README.md，并在此取消忽略
+#!data/raw/README.md
+
+
+# ======================
+# 🤖 深度学习 / Transformers 缓存
+# ======================
+~/.cache/
+.cache/
+huggingface/
+hf_cache/
+transformers_cache/
+torch_cache/
+tokenizers/
+tokenizer_cache/
+sentence_transformers/
+
+# PyTorch Hub 缓存
+torch/hub/
+.torch/
+
+
+# ======================
+# 🕷️ 爬虫项目（crawler_project）临时文件
+# ======================
+crawler_project/**/__pycache__/
+crawler_project/**/output/
+crawler_project/**/temp/
+crawler_project/**/data_cache/
+/crawler_project/simple_steam_scraper/
+
+# ======================
+# 🧪 测试与覆盖率
+# ======================
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.coverage
+*.lcov
+
+# 测试生成的临时向量数据库
+test_chroma_db/
+**/test_*_db/
+**/*_test_db/
+
+
+# ======================
+# 🔒 系统文件 / 隐藏文件
+# ======================
+*.bak
+*.sav
+*.backup
+*.log
+*.lock
+*.pid
+
+
+# ======================
+# 📁 项目特定目录
+# ======================
+# 忽略打包生成的 egg-info
+src/game_rec_agent.egg-info/
+
+# 忽略 Python 自动生成的 __pycache__
+src/**/__pycache__/
+
+
+# ======================
+# 🧩 可选：只保留数据目录结构
+# 如果你想保留 data 目录，但不上传内部数据：
+# （可在 data/ 下创建一个独立的 .gitignore 文件）
+#
+#   # game_rec_agent/data/.gitignore
+#   *
+#   !.gitignore
+#   !README.md
+#
+
+
+# ======================
+# ✅ 完成
+# ======================
+# 本文件可直接放置在项目根目录 (game_rec_agent/.gitignore)
+# 建议执行以下命令使其立即生效：
+#   git rm -r --cached .
+#   git add .
+#   git commit -m "update .gitignore rules"

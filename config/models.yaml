@@ -1,0 +1,62 @@
+# ==========================================
+# 模型配置文件
+# ==========================================
+
+# Ollama 大语言模型配置
+llm:
+  provider: "ollama"  # 可选: ollama, openai, azure
+  ollama:
+    base_url: "http://localhost:11434"  # Ollama服务地址
+    model: "deepseek-r1:latest"  
+    temperature: 0.7
+    top_p: 0.9
+    max_tokens: 2048
+    timeout: 120  # 请求超时(秒)
+  
+  # OpenAI配置(当provider为openai时使用)
+  openai:
+    api_key: "${OPENAI_API_KEY}"  # 从环境变量读取
+    model: "gpt-4o-mini"
+    temperature: 0.7
+    max_tokens: 2048
+
+# Embedding 模型配置
+embedding:
+  provider: "sentence_transformers"  # 固定使用sentence-transformers
+  model_name: "BAAI/bge-large-zh-v1.5"  # 中文embedding模型
+  # 其他可选模型:
+  # - "BAAI/bge-base-zh-v1.5"  (更快,效果稍差)
+  # - "sentence-transformers/all-MiniLM-L6-v2"  (英文,轻量级)
+  # - "intfloat/multilingual-e5-large"  (多语言)
+  
+  device: "cuda"  # 可选: cuda, cpu, mps(Mac M1/M2)
+  batch_size: 32
+  max_length: 512
+  normalize_embeddings: true
+  cache_dir: "./data/model_cache"  # 模型缓存目录
+
+# Rerank 模型配置
+rerank:
+  provider: "sentence_transformers"
+  model_name: "BAAI/bge-reranker-large"  # 中文rerank模型
+  # 其他可选模型:
+  # - "BAAI/bge-reranker-base"  (更快)
+  # - "cross-encoder/ms-marco-MiniLM-L-6-v2"  (英文)
+  
+  device: "cuda"  # 可选: cuda, cpu, mps
+  batch_size: 16
+  max_length: 512
+  cache_dir: "./data/model_cache"
+
+# 向量数据库配置
+vectordb:
+  provider: "chroma"  # 固定使用Chroma
+  persist_directory: "./data/processed/vecdb"
+  collection_name: "steam_games"
+  distance_metric: "cosine"  # 可选: cosine, l2, ip
+
+# 日志配置
+logging:
+  level: "INFO"  # 可选: DEBUG, INFO, WARNING, ERROR
+  log_file: "./logs/model_manager.log"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

@@ -1,0 +1,9 @@
+# 全局配置占位：存放 API 密钥、模型名称、路径等
+app:
+  name: game_rec_agent
+  env: dev
+models:
+  generator: YOUR_LLM_NAME
+paths:
+  data_raw: data/raw
+  data_processed: data/processed

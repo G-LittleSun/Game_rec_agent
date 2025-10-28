@@ -1,0 +1,3 @@
+# 项目运行期依赖（占位）
+streamlit
+pyyaml
