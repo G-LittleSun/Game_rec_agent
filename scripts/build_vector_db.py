@@ -353,6 +353,16 @@ def validate_results(
 # ==================== 主函数 ====================
 def main():
     """主执行流程"""
+    """
+    --input, -i      # 输入文件路径
+    --output, -o     # 向量库输出目录
+    --collection, -c # ChromaDB集合名称
+    --batch-size, -b # 批处理大小
+    --reset          # 重置向量库
+    --incremental    # 增量模式(待实现)
+    --log-level      # 日志级别
+    --skip-validation # 跳过验证
+    """
     # 解析命令行参数
     parser = argparse.ArgumentParser(
         description="构建游戏推荐向量数据库",
