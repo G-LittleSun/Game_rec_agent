@@ -239,12 +239,23 @@ class ChromaVectorStore(VectorStore):
         self.logger.info("✅ ChromaDB自动持久化")
     
     def reset(self) -> None:
-        """清空向量库"""
+        """清空向量库并重新创建collection"""
         try:
-            self.client.delete_collection(self.collection.name)
-            self.logger.info(f"✅ 集合 {self.collection.name} 已清空")
+            collection_name = self.collection.name
+            collection_metadata = self.collection.metadata
+            
+            # 删除旧集合
+            self.client.delete_collection(collection_name)
+            self.logger.info(f"✅ 集合 {collection_name} 已删除")
+            
+            # 重新创建集合
+            self.collection = self.client.get_or_create_collection(
+                name=collection_name,
+                metadata=collection_metadata
+            )
+            self.logger.info(f"✅ 集合 {collection_name} 已重新创建")
         except Exception as e:
-            self.logger.error(f"❌ 清空集合失败: {e}")
+            self.logger.error(f"❌ 重置集合失败: {e}")
             raise
     
     @staticmethod

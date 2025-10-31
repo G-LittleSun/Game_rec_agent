@@ -139,7 +139,7 @@ def preprocess_data(
     start_time = time.time()
     
     normalizer = DataNormalizer()
-    df_normalized = normalizer.normalize(df)
+    df_normalized = normalizer.normalize_dataframe(df, strict=False)
     
     elapsed = time.time() - start_time
     logger.info(f"归一化完成: {len(df_normalized)} 行保留, 耗时 {elapsed:.2f}秒")
@@ -178,8 +178,8 @@ def vectorize_and_store(
     
     Args:
         df: 预处理后的DataFrame
-        output_dir: 向量库输出目录
-        collection_name: 集合名称
+        output_dir: 向量库输出目录（暂未使用，由配置文件控制）
+        collection_name: 集合名称（暂未使用，由配置文件控制）
         batch_size: 批处理大小
         reset: 是否重置向量库
         logger: 日志对象
@@ -191,26 +191,26 @@ def vectorize_and_store(
     logger.info("开始向量化与入库")
     logger.info("=" * 60)
     
-    # 初始化向量库
-    logger.info(f"初始化ChromaDB: {output_dir}")
-    vectorstore = ChromaVectorStore(
-        persist_directory=str(output_dir),
-        collection_name=collection_name
-    )
-    
-    # 重置向量库
+    # 重置向量库（如果需要）
     if reset:
         logger.warning("重置模式: 将清空现有向量库")
-        vectorstore.reset()
+        # 先初始化一个临时 vectorizer 用于 reset
+        temp_vectorizer = GameVectorizer()
+        temp_vectorizer.vector_store.reset()
         logger.info("向量库已重置")
-    else:
-        existing_count = vectorstore.get_count()
-        if existing_count > 0:
-            logger.info(f"向量库已存在 {existing_count} 条记录")
+        # 删除临时对象，释放资源
+        del temp_vectorizer
     
-    # 初始化向量化器
+    # 初始化向量化器（reset 后会重新创建 collection）
     logger.info("初始化GameVectorizer")
-    vectorizer = GameVectorizer(vectorstore=vectorstore)
+    vectorizer = GameVectorizer()
+    
+    # 获取向量库实例
+    vectorstore = vectorizer.vector_store
+    logger.info(f"集合名称: {vectorstore.collection.name}")
+    
+    existing_count = vectorstore.get_count()
+    logger.info(f"当前文档数: {existing_count}")
     
     # 执行向量化
     logger.info(f"开始向量化: {len(df)} 个游戏, 批次大小={batch_size}")
@@ -222,6 +222,18 @@ def vectorize_and_store(
     )
     
     elapsed = time.time() - start_time
+    
+    # 检查返回值
+    if stats is None:
+        logger.error("向量化失败: vectorize_batch 返回 None")
+        return {
+            'total_games': len(df),
+            'successful': 0,
+            'failed': len(df),
+            'elapsed_seconds': elapsed,
+            'games_per_second': 0,
+            'final_count': 0
+        }
     
     # 输出统计信息
     logger.info("=" * 60)
@@ -255,16 +267,12 @@ def vectorize_and_store(
 
 # ==================== 结果验证 ====================
 def validate_results(
-    output_dir: Path,
-    collection_name: str,
     logger: logging.Logger
 ) -> bool:
     """
     验证向量库质量
     
     Args:
-        output_dir: 向量库目录
-        collection_name: 集合名称
         logger: 日志对象
         
     Returns:
@@ -275,11 +283,12 @@ def validate_results(
     logger.info("=" * 60)
     
     try:
-        # 重新连接向量库
-        vectorstore = ChromaVectorStore(
-            persist_directory=str(output_dir),
-            collection_name=collection_name
-        )
+        # 重新初始化向量化器以获取向量库和模型
+        vectorizer = GameVectorizer()
+        vectorstore = vectorizer.vector_store
+        model_manager = vectorizer.model_manager
+        
+        logger.info(f"集合名称: {vectorstore.collection.name}")
         
         total_count = vectorstore.get_count()
         logger.info(f"向量库总记录数: {total_count}")
@@ -289,10 +298,12 @@ def validate_results(
             return False
         
         # 测试查询1: 通用查询
-        logger.info("\n测试查询 1: 'RPG adventure games'")
+        logger.info("\n测试查询 1: '开放世界游戏，价格低'")
+        query_text = "开放世界游戏，价格低"
+        query_embedding = model_manager.encode_text([query_text], is_query=True)
         results = vectorstore.query(
-            query_texts=["RPG adventure games"],
-            n_results=5
+            query_embeddings=query_embedding,
+            top_k=5
         )
         
         if results:
@@ -306,10 +317,12 @@ def validate_results(
             logger.warning("查询未返回结果")
         
         # 测试查询2: 特定类型
-        logger.info("\n测试查询 2: 'multiplayer shooter games'")
+        logger.info("\n测试查询 2: '多人射击游戏'")
+        query_text = "多人射击游戏"
+        query_embedding = model_manager.encode_text([query_text], is_query=True)
         results = vectorstore.query(
-            query_texts=["multiplayer shooter games"],
-            n_results=5
+            query_embeddings=query_embedding,
+            top_k=5
         )
         
         if results:
@@ -324,10 +337,12 @@ def validate_results(
         
         # 测试查询3: 元数据过滤
         logger.info("\n测试查询 3: 带元数据过滤 (Windows平台)")
+        query_text = "strategy games"
+        query_embedding = model_manager.encode_text([query_text], is_query=True)
         results = vectorstore.query(
-            query_texts=["strategy games"],
-            n_results=5,
-            where={"Windows": True}
+            query_embeddings=query_embedding,
+            top_k=5,
+            filter_dict={"Windows": True}
         )
         
         if results:
@@ -472,11 +487,7 @@ def main():
         
         # 步骤4: 结果验证
         if not args.skip_validation:
-            validation_passed = validate_results(
-                output_dir=output_dir,
-                collection_name=args.collection,
-                logger=logger
-            )
+            validation_passed = validate_results(logger=logger)
             
             if not validation_passed:
                 logger.error("验证失败，但向量库已构建")
@@ -489,9 +500,9 @@ def main():
         logger.info("构建完成")
         logger.info("=" * 60)
         logger.info(f"总耗时: {total_elapsed:.2f}秒 ({total_elapsed/60:.2f}分钟)")
-        logger.info(f"向量库路径: {output_dir}")
         logger.info(f"成功向量化: {stats['successful']} / {stats['total_games']}")
         logger.info(f"平均速度: {stats['games_per_second']:.2f} 游戏/秒")
+        logger.info(f"最终文档数: {stats['final_count']}")
         logger.info("=" * 60)
         
         return 0

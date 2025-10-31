@@ -186,13 +186,16 @@ class GameVectorizer:
         self,
         df: pd.DataFrame,
         batch_size: Optional[int] = None
-    ) -> None:
+    ) -> Dict[str, Any]:
         """
         批量向量化并存入向量数据库
         
         Args:
             df: 已标准化且完成特征工程的DataFrame
             batch_size: 批处理大小，None则使用配置文件的值
+            
+        Returns:
+            统计信息字典 {'total_games', 'successful', 'failed'}
         """
         if batch_size is None:
             batch_size = self.vec_config.get("batch_processing", {}).get("chunk_size", 32)
@@ -272,6 +275,13 @@ class GameVectorizer:
         self.logger.info(f"   - 成功: {success_count} 条")
         self.logger.info(f"   - 失败: {error_count} 条")
         self.logger.info(f"   - 数据库总数: {final_count} 条")
+        
+        # 返回统计信息
+        return {
+            'total_games': total,
+            'successful': success_count,
+            'failed': error_count
+        }
     
     def test_query(self, query_text: str, top_k: int = 5) -> List[Dict[str, Any]]:
         """
