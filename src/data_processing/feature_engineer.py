@@ -246,6 +246,55 @@ class FeatureEngineer:
             return quality.clip(0, 1)
         else:
             return pd.Series(0, index=df.index)
+    
+    def add_derived_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        一键添加所有衍生特征
+        
+        这是向量化管线的主要入口方法
+        
+        Args:
+            df: 已标准化的DataFrame
+            
+        Returns:
+            添加了衍生特征的DataFrame
+        """
+        df = df.copy()
+        
+        # 1. 计算评分 (rating_score)
+        if 'Positive' in df.columns and 'Negative' in df.columns:
+            rating_config = self.config.get('rating', {})
+            method = rating_config.get('method', 'wilson_score')
+            confidence = rating_config.get('confidence', 0.95)
+            
+            df['rating_score'] = self.compute_rating(
+                positive=df['Positive'],
+                negative=df['Negative'],
+                method=method,
+                confidence=confidence
+            )
+        else:
+            df['rating_score'] = 0.0
+        
+        # 2. 计算热度评分 (popularity_score)
+        popularity_config = self.config.get('popularity', {})
+        df['popularity_score'] = self.compute_popularity_score(
+            df=df,
+            weights=popularity_config.get('weights')
+        )
+        
+        # 3. 计算质量评分 (quality_score)
+        # 需要先将rating_score作为final_rating
+        df['final_rating'] = df['rating_score']
+        
+        quality_config = self.config.get('quality', {})
+        df['quality_score'] = self.compute_quality_score(
+            df=df,
+            weights=quality_config.get('weights')
+        )
+        
+        return df
+
 
 
 

@@ -12,13 +12,26 @@ text_fusion:
   # 融合文本模板 - 决定最终送入embedding的文本格式
   template: |
     Name: {Name}.
-    About: {About_cleaned}.
+    About: {About the game}.
     Genres: {Genres}.
     Tags: {Tags}.
     Categories: {Categories}.
     Release year: {Release_year}.
     Platforms: {Platforms}.
-    Popularity: {popularity_score:.3f}, Quality: {quality_score:.3f}.
+    Developers: {Developers}.
+    Publishers: {Publishers}.
+  
+  # 参与文本融合的字段列表
+  fields:
+    - Name
+    - About the game
+    - Genres
+    - Tags
+    - Categories
+    - Release_year
+    - Platforms
+    - Developers
+    - Publishers
   
   # About the game 文本清洗配置
   about_cleaning:

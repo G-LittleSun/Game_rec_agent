@@ -1,6 +1,6 @@
 """
 向量存储抽象基类
-定义统一的向量数据库接口
+定义统一接口，强制所有向量数据库实现类遵守同一规范，方便切换数据库
 """
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional

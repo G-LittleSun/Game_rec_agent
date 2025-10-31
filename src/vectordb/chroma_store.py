@@ -43,16 +43,16 @@ class ChromaVectorStore(VectorStore):
         self.client = chromadb.PersistentClient(
             path=persist_directory,
             settings=Settings(
-                anonymized_telemetry=False,
-                allow_reset=True
+                anonymized_telemetry=False,  # 关闭遥测（保护隐私）
+                allow_reset=True   # 允许重置（测试时有用）
             )
         )
         
         # 距离度量映射
         distance_map = {
-            "cosine": "cosine",
-            "l2": "l2",
-            "ip": "ip"  # inner product
+            "cosine": "cosine",  # 余弦相似度（推荐，归一化后等价于点积）
+            "l2": "l2",   # 欧氏距离（对向量长度敏感）
+            "ip": "ip"  # inner product 内积（适合已归一化的向量）
         }
         
         # 创建或获取集合
@@ -88,7 +88,7 @@ class ChromaVectorStore(VectorStore):
             }
             
             if metadatas is not None:
-                # 清洗metadata(移除None值,确保JSON可序列化)
+                # 清洗metadata(移除None值,确保JSON可序列化)。ChromaDB 对 metadata 有严格要求
                 cleaned_metadatas = [
                     self._clean_metadata(m) for m in metadatas
                 ]
