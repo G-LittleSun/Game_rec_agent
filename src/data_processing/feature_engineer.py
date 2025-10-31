@@ -34,6 +34,9 @@ class FeatureEngineer:
             positive: 正面评价数
             negative: 负面评价数
             method: 计算方法 (simple, wilson_score, bayesian)
+                simple: 简单比例 (positive / (positive + negative))
+                wilson_score: 在简单好评率的基础上，考虑了“评分数量”对结果置信度的影响，从而有效地解决了样本量过小的问题。
+                bayesian: 贝叶斯平均
             confidence: 置信度(用于wilson_score)
         
         Returns:
@@ -107,15 +110,15 @@ class FeatureEngineer:
         if weights is None:
             weights = {
                 'Estimated owners': 0.4,
-                'Recommendations': 0.3,
-                'Peak CCU': 0.2,
-                'Average playtime forever': 0.1
+                'Recommendations': 0.3,     # 用户主动推荐
+                'Peak CCU': 0.2,     #曾经火
+                'Average playtime forever': 0.1     #挂机游戏时长虚高
             }
         
         # 提取并归一化各项指标
         scores = []
         
-        # 处理Estimated owners(字符串格式: "20000 - 50000")
+        # 处理Estimated owners(字符串格式: "20000 - 50000")，对数归一化
         if 'Estimated owners' in df.columns and weights.get('Estimated owners', 0) > 0:
             owners = self._parse_owners(df['Estimated owners'])
             owners_norm = self._normalize(owners, method='log')
@@ -245,29 +248,4 @@ class FeatureEngineer:
             return pd.Series(0, index=df.index)
 
 
-# 示例用法
-if __name__ == "__main__":
-    # 创建测试数据
-    test_data = pd.DataFrame({
-        'Positive': [1000, 500, 100, 10],
-        'Negative': [100, 500, 900, 90],
-        'Estimated owners': ['10000 - 20000', '50000 - 100000', '1000 - 5000', '0 - 0'],
-        'Recommendations': [500, 200, 50, 5],
-        'Peak CCU': [10000, 5000, 1000, 100],
-        'Average playtime forever': [3000, 1500, 500, 100],
-        'Metacritic score': [85, 70, 60, 0]
-    })
-    
-    engineer = FeatureEngineer()
-    
-    # 计算评分
-    test_data['rating'] = engineer.compute_rating(
-        test_data['Positive'],
-        test_data['Negative'],
-        method='wilson_score'
-    )
-    
-    # 计算热度
-    test_data['popularity'] = engineer.compute_popularity_score(test_data)
-    
-    print(test_data[['Positive', 'Negative', 'rating', 'popularity']])
+
